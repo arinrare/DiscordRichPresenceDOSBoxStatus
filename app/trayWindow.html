@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Tray Status</title>
+  <link rel="stylesheet" href="../assets/trayWindow.css">
+</head>
+<body>
+  <button id="close-btn" style="position:absolute;top:5px;right:10px;padding:2px 8px;border:none;background:#444;color:#fff;border-radius:3px;cursor:pointer;">Close</button>
+  <div class="status" id="dosbox-status">Dosbox <span class="tick" id="dosbox-tick">&#10007;</span></div>
+</body>
+<script>
+  window.electronAPI.onDosboxStatus((running) => {
+    const tick = document.getElementById('dosbox-tick');
+    if (running) {
+      tick.textContent = '✔';
+      tick.style.color = '#0f0';
+    } else {
+      tick.textContent = '✖';
+      tick.style.color = '#f00';
+    }
+  });
+
+  window.electronAPI.onDosboxStatus((running) => {
+    const tick = document.getElementById('dosbox-tick');
+    if (running) {
+      tick.textContent = '✔';
+      tick.style.color = '#0f0';
+    } else {
+      tick.textContent = '✖';
+      tick.style.color = '#f00';
+    }
+  });
+
+  document.getElementById('close-btn').addEventListener('click', () => {
+    window.electronAPI.hideTrayWindow();
+  });
+</script>
+</html>
