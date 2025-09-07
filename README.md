@@ -1,4 +1,4 @@
-# Arinrares Discord Presence Tray App
+# Arinrares Rich Discord Presence DOSBox Tray App
 
 A Windows-only Electron tray application that displays Discord Rich Presence and DOSBox status.
 
