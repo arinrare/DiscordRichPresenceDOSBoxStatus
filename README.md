@@ -16,6 +16,10 @@ A Windows-only Electron tray application that displays Discord Rich Presence and
 
 ## Installation (Windows Only)
 
+1. Either run the release executable from the releases on Github
+
+** OR ** to run in development follow the below procedure
+
 1. **Download and install Node.js** (v16 or newer recommended).
 
 2. **Clone or download this repository.**
