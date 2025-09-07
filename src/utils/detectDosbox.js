@@ -16,7 +16,19 @@ function logToFile(message) {
 async function isDosboxRunning() {
   try {
     const processes = await psList();
-    return processes.some(p => p.name && p.name.toLowerCase().includes('dosbox'));
+    // Only match exact process names (dosbox.exe, dosbox-x.exe, etc.)
+    const dosboxProcess = processes.find(p => {
+      const name = p.name && p.name.toLowerCase();
+      return name === 'dosbox.exe' || name === 'dosbox-x.exe' || name === 'dosboxece.exe';
+    });
+    if (!dosboxProcess) return false;
+
+    // Check for a valid Dosbox window title
+    return await new Promise(resolve => {
+      getDosboxWindowTitleViaPowerShell(title => {
+        resolve(!!title);
+      });
+    });
   } catch (err) {
     logToFile('ps-list failed: ' + err);
     return false;
