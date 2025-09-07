@@ -55,13 +55,15 @@ app.on('ready', () => {
 
   tray.setContextMenu(contextMenu);
 
-  app.setLoginItemSettings({
-    openAtLogin: true,
-    path: process.execPath,
-    args: ['--hidden']
-  });
+    if (app.isPackaged) {
+      app.setLoginItemSettings({
+        openAtLogin: true,
+        path: process.execPath,
+        args: ['--hidden']
+      });
+    }
 
-  tray.setContextMenu(contextMenu);
+    tray.setContextMenu(contextMenu);
 
   trayWindow = new BrowserWindow({
     width: 160,
