@@ -9,27 +9,84 @@ let rpcReady = false;
 let tray = null;
 let trayWindow = null;
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
+
+// Config file path in app data folder
+const appDataPath = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
+const configDir = path.join(appDataPath, 'dosboxstatus');
+const configPath = path.join(configDir, 'config.json');
+
+// Ensure config directory exists
+function ensureConfigDir() {
+  if (!fs.existsSync(configDir)) {
+    fs.mkdirSync(configDir, { recursive: true });
+  }
+}
+
+// Save user preference
+function saveConfig(openAtLogin) {
+  try {
+    ensureConfigDir();
+    fs.writeFileSync(configPath, JSON.stringify({ openAtLogin }, null, 2));
+  } catch (err) {
+    if (logging) console.error('Failed to save config:', err);
+  }
+}
+
+// Load user preference
+function loadConfig() {
+  try {
+    if (fs.existsSync(configPath)) {
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+      return config.openAtLogin;
+    }
+  } catch (err) {
+    if (logging) console.error('Failed to load config:', err);
+  }
+  return null; // Return null if no config or error
+}
 
 const clientId = '1414117031246037013';
 
 app.on('ready', () => {
+  // Clean up any stale login items that might point to old/moved executables
+  if (app.isPackaged) {
+    const currentSettings = app.getLoginItemSettings();
+    if (currentSettings.openAtLogin && currentSettings.executableWillLaunchAtLogin === false) {
+      // The registry entry exists but the executable path is invalid
+      app.setLoginItemSettings({ openAtLogin: false });
+    }
+  }
+
   tray = new Tray(__dirname + '/assets/icon.png');
   tray.setToolTip('Dosbox Status');
-  let openAtLogin = app.getLoginItemSettings().openAtLogin;
+  
+  // Load preference from config file, fallback to system setting
+  let savedPreference = loadConfig();
+  let openAtLogin = savedPreference !== null ? savedPreference : app.getLoginItemSettings().openAtLogin;
   
   const contextMenu = Menu.buildFromTemplate([
     {
       label: openAtLogin ? 'Disable Start with Windows' : 'Enable Start with Windows',
       click: () => {
         openAtLogin = !openAtLogin;
-        app.setLoginItemSettings({ openAtLogin });
+        saveConfig(openAtLogin);
+        app.setLoginItemSettings({ 
+          openAtLogin,
+          path: process.execPath,
+          args: openAtLogin ? ['--hidden'] : []
+        });
         tray.setContextMenu(Menu.buildFromTemplate([
           {
             label: openAtLogin ? 'Disable Start with Windows' : 'Enable Start with Windows',
             click: () => {
               openAtLogin = !openAtLogin;
+              saveConfig(openAtLogin);
               app.setLoginItemSettings({ 
-                openAtLogin
+                openAtLogin,
+                path: process.execPath,
+                args: openAtLogin ? ['--hidden'] : []
               });
               tray.setContextMenu(contextMenu);
             }
@@ -55,15 +112,18 @@ app.on('ready', () => {
 
   tray.setContextMenu(contextMenu);
 
-    if (app.isPackaged) {
-      app.setLoginItemSettings({
-        openAtLogin: true,
-        path: process.execPath,
-        args: ['--hidden']
-      });
-    }
+  // Save the initial preference if it's the first run (no config file exists)
+  if (savedPreference === null) {
+    saveConfig(openAtLogin);
+  }
 
-    tray.setContextMenu(contextMenu);
+  if (app.isPackaged && openAtLogin) {
+    app.setLoginItemSettings({
+      openAtLogin: true,
+      path: process.execPath,
+      args: ['--hidden']
+    });
+  }
 
   trayWindow = new BrowserWindow({
     width: 160,
@@ -137,6 +197,17 @@ app.on('ready', () => {
       if (logging) console.error('Error checking Dosbox:', err);
     }
   }, 5000);
+});
+
+app.on('before-quit', () => {
+  // Clean up login item based on user preference or if config is missing
+  if (app.isPackaged) {
+    const savedPreference = loadConfig();
+    if (savedPreference === null || savedPreference === false) {
+      // Either no config file (uninstalled) or user disabled auto-start
+      app.setLoginItemSettings({ openAtLogin: false });
+    }
+  }
 });
 
 ipcMain.on('hide-tray-window', () => {
