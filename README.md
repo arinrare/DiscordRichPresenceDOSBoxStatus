@@ -16,25 +16,28 @@ A Windows-only Electron tray application that displays Discord Rich Presence and
 
 ## Installation (Windows Only)
 
-1. Either run the release executable from the releases on Github
+1. **Release build (recommended for normal use)**
+  - Download the latest installer from the GitHub Releases page.
+  - Run the installer and follow the prompts.
+  - Node.js and npm are **not** required for the installed app.
 
-** OR ** to run in development follow the below procedure
+2. **Development build (for hacking on the code)**
 
-1. **Download and install Node.js** (v16 or newer recommended).
+  1. **Download and install Node.js** (v16 or newer recommended).
 
-2. **Clone or download this repository.**
+  2. **Clone or download this repository.**
 
-3. **Install dependencies:**
-   ```powershell
-   npm install
-   ```
+  3. **Install dependencies:**
+    ```powershell
+    npm install
+    ```
 
-4. **Build the app:**
-   ```powershell
-   npm run build
-   ```
+  4. **Build the app:**
+    ```powershell
+    npm run build
+    ```
 
-5. **Run the packaged installer:**
+  5. **Run the packaged installer:**
    - After building, find the installer in the `dist` folder (e.g., `dist\DOSBox Status Setup.exe`).
    - Double-click to install.
 
@@ -89,14 +92,24 @@ A Windows-only Electron tray application that displays Discord Rich Presence and
 
 ## Requirements
 
-- Windows OS
-- Node.js v16 or newer
+- Windows OS (64-bit recommended)
+- For **release build users**: a compatible **Microsoft Visual C++ Redistributable (x64)** must be installed. This is typically already present on many systems; installing Node.js also brings in the required runtime.
+  - Microsoft Visual C++ Redistributable (x64) download page: https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist
+- For **development**: Node.js v16 or newer
+  - Node.js downloads: https://nodejs.org/
 
 ---
 
 ## Troubleshooting
 
-- If the app does not detect DOSBox, ensure `ps-list` is installed and the binary is present in `node_modules/ps-list/vendor/`.
+- **DOSBox not detected / no green tick:**
+  - Ensure `ps-list` is installed and the binary is present in `node_modules/ps-list/vendor/` when running from source.
+  - For the installed app, confirm DOSBox is actually running and has a visible window.
+- **Discord Rich Presence not updating:**
+  - Make sure the Discord desktop client is running and "Display current activity as a status message" is enabled in Discord settings.
+  - Check that the Discord application ID in `main.js` matches your app in the Discord Developer Portal and that a Rich Presence asset with key `icon` exists.
+  - Ensure the required **Visual C++ Redistributable (x64)** is installed. Installing Node.js can also satisfy this dependency on a fresh Windows install.
+  - If problems persist, try running a development build once (`npm install` then `npm start`) to verify connectivity and surface any RPC errors in the console.
 - If you see duplicate tray icons or registry entries, uninstall previous versions and clean up registry keys.
 - For process detection issues, check the log file at `%APPDATA%\dosboxstatus\dosboxstatus.log`.
 
